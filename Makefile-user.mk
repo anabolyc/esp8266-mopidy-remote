@@ -3,10 +3,10 @@
 ## Uncomment and change examples:
 
 ## MacOS / Linux:
- ESP_HOME = /media/storage/opt/esp-open-sdk
+ ESP_HOME = /opt/esp-open-sdk
 
 ## MacOS / Linux
- SMING_HOME = /media/storage/opt/Sming/Sming
+ SMING_HOME = /opt/Sming/Sming
 
 ## MacOS / Linux:
  COM_PORT = /dev/ttyUSB0
@@ -16,7 +16,7 @@
 
 ## Add your source directories here separated by space
 # MODULES = app
-#EXTRA_INCDIR = include $SMING_HOME/third-party/esp-open-lwip/
+#EXTRA_INCDIR = include /home/dronische/dev/_thirdparty/IRremoteESP8266/src/
 
 ## Configure flash parameters (for ESP12-E and other new boards):
 # SPI_MODE: qio, qout, dio, dout  
@@ -26,8 +26,9 @@ SPI_MODE = dio
 SPI_SIZE = 4M
 
 ## SPIFFS options
-#DISABLE_SPIFFS = 0
-SPIFF_FILES = files
+#DISABLE_SPIFFS = 1
+#SPIFF_FILES = files
+SPIFF_FILES = web/build
 
-PATH := /media/storage/opt/esp-open-sdk/esptool2:$(PATH)
+PATH := /opt/esp-open-sdk/esptool2:$(PATH)
 
