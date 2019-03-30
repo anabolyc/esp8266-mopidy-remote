@@ -27,7 +27,6 @@ SPI_SIZE = 4M
 
 ## SPIFFS options
 #DISABLE_SPIFFS = 1
-#SPIFF_FILES = files
 SPIFF_FILES = web/build
 
 PATH := /opt/esp-open-sdk/esptool2:$(PATH)

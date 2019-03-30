@@ -1,15 +1,19 @@
 #include "wifimanager.h"
 #include <AppSettings.h>
 
-Timer *WifiManager::led_timer = new Timer();
+Timer *WifiManager::led_timer = NULL;
 bool WifiManager::savedState1 = false;
 bool WifiManager::savedState0 = false;
 
+DeviceConnectedDelegate _callback;
+
 BssList WifiManager::networks; 
 
-void WifiManager::start() {
+void WifiManager::start(DeviceConnectedDelegate callback) {
     pinMode(LED_BLU_PIN, OUTPUT);
 	digitalWrite(LED_BLU_PIN, 1);
+
+	_callback = callback;
 
     // #ifdef WIFI_SSID
     // WifiStation.enable(true);
@@ -31,8 +35,8 @@ void WifiManager::start() {
 
 void WifiManager::gotIP(IPAddress ip, IPAddress netmask, IPAddress gateway)
 {
-	debugf("CONNECTED: ");
-	Serial.println(ip.toString());
+	debugf("CONNECTED: %s", ip.toString().c_str());
+	_callback();
 }
 
 void WifiManager::connectFail(String ssid, uint8_t ssidLength, uint8_t* bssid, uint8_t reason)
@@ -69,12 +73,14 @@ void WifiManager::configAccessPoint(bool enable) {
 void WifiManager::blinkWifiLed(bool enable) {
 	if (enable) {
 		if (savedState1 == false) {
+			led_timer = new Timer();
 			led_timer->initializeMs(WIFI_LED_OFF, wifiLedOn).startOnce();
 			savedState1 = true;
 		}
 	} else {
 		if (savedState1 == true) {
 			led_timer->stop();
+			delete led_timer;
 			digitalWrite(LED_BLU_PIN, 1);
 			savedState1 = false;	
 		}

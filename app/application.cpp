@@ -4,19 +4,16 @@
 #include "webserver.h"
 #include "ir.h"
 #include <AppSettings.h>
-#include <VarSettings.h>
 
-#define LED_RED_PIN 16 // GPIO16
 #define SERIAL_DEBUG true
 
-WebServer webserver;
-WifiManager wifimanager;
-IR ir;
+void onConnected() {
+	WebServer::start();
+	IR::start();
+}
 
 void onReady() {
-	wifimanager.start();
-	webserver.start();
-	ir.start();
+	WifiManager::start(onConnected);
 }
 
 void init()
@@ -27,7 +24,6 @@ void init()
 	Serial.systemDebugOutput(SERIAL_DEBUG);
 
 	AppSettings.load();
-	VarSettings.load();
 	
 	WifiManager::configAccessPoint(true);
 

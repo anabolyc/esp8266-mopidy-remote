@@ -11,11 +11,14 @@
 // #endif
 
 #include <SmingCore/SmingCore.h>
+#include <SmingCore/Delegate.h>
+
+typedef Delegate<void(void)> DeviceConnectedDelegate;
 
 class WifiManager {
 
 public:
-    void start();
+    static void start(DeviceConnectedDelegate callback);
     static void configAccessPoint(bool enable);
     static BssList networks;
 

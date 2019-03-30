@@ -1,11 +1,12 @@
 #include "webserver.h"
 #include "wifimanager.h"
 #include <AppSettings.h>
-#include <VarSettings.h>
 
 String WebServer::lastModified;
 String WebServer::network, WebServer::password;
-Timer WebServer::conn_timer;
+Timer *WebServer::conn_timer = NULL;
+
+HttpServer server;
 
 void WebServer::start()
 {
@@ -19,13 +20,11 @@ void WebServer::start()
 
 	server.addPath("/", onIndex);
 	server.addPath("/wifi", onWifi);
-	server.addPath("/vars", onVars);
 	server.addPath("/ajax/get-networks", onAjaxNetworkList);
 	server.addPath("/ajax/connect", onAjaxConnect);
-	server.addPath("/ajax/vars", onAjaxVars);
 
 	server.setDefaultHandler(onFile);
-	Serial.println("\r\n=== WEB SERVER STARTED ===");
+	debugf("Web server service has started");
 }
 
 void WebServer::onFile(HttpRequest &request, HttpResponse &response)
@@ -67,54 +66,6 @@ void WebServer::onIndex(HttpRequest &request, HttpResponse &response)
 void WebServer::onWifi(HttpRequest &request, HttpResponse &response)
 {
 	response.sendFile("wifi.html");
-}
-
-void WebServer::onVars(HttpRequest &request, HttpResponse &response)
-{
-	response.sendFile("vars.html");
-}
-
-void WebServer::onAjaxVars(HttpRequest &request, HttpResponse &response)
-{
-	switch (request.method)
-	{
-	case HTTP_OPTIONS:
-		debugf("onAjaxVars: %s", "OPTIONS");
-
-		response.setAllowCrossDomainOrigin("*");
-		response.setHeader("Access-Control-Allow-Methods", "GET,PUT,DELETE");
-		response.code = HTTP_STATUS_OK;
-		break;
-	
-	case HTTP_GET:
-		debugf("onAjaxVars: %s", "GET");
-
-		response.setAllowCrossDomainOrigin("*");
-		response.setContentType(MIME_JSON);
-		if (VarSettings.exist())
-			response.sendFile(VarSettings.src);
-		else
-			response.sendString("{}");
-		break;
-	
-	case HTTP_PUT:
-	case HTTP_POST:
-	{
-		debugf("onAjaxVars: %s", "PUT");
-
-		String key = request.getPostParameter("key");
-		String value = request.getPostParameter("value");
-		debugf("*** new item: %s: %s", key.c_str(), value.c_str());
-
-		VarSettings.add(key, value);
-		VarSettings.save();
-
-		response.code = HTTP_STATUS_OK;
-		break;
-	}
-	default:
-		debugf("onAjaxVars: %i", request.method);
-	}
 }
 
 void WebServer::onAjaxNetworkList(HttpRequest &request, HttpResponse &response)
@@ -159,6 +110,7 @@ void WebServer::makeConnection()
 	AppSettings.save();
 
 	network = "";
+	delete conn_timer;
 }
 
 void WebServer::onAjaxConnect(HttpRequest &request, HttpResponse &response)
@@ -185,7 +137,8 @@ void WebServer::onAjaxConnect(HttpRequest &request, HttpResponse &response)
 		password = curPass;
 		debugf("CONNECT TO: %s %s", network.c_str(), password.c_str());
 		json["connected"] = false;
-		conn_timer.initializeMs(500, makeConnection).startOnce();
+		conn_timer = new Timer();
+		conn_timer->initializeMs(500, makeConnection).startOnce();
 	}
 	else
 	{
