@@ -5,10 +5,8 @@
 #define IR_SEND_PIN  4 // GPIO4
 
 #include <SmingCore/SmingCore.h>
-#include <Libraries/IR/src/IRrecv.h>
-#include <Libraries/IR/src/IRutils.h>
+#include "IRrecv.h"
 #include "mopidy.h"
-
 
 #define BTN_A 0xE0E036C9
 #define BTN_B 0xE0E028D7

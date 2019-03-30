@@ -20,7 +20,7 @@ void IR::receiveIR()
 	if (ir_recv.decode(&dresults))
 	{
 		debugf("IR received: %d", dresults.value);
-		debugf("%s", resultToHumanReadableBasic(&dresults).c_str());
+		//debugf("%s", resultToHumanReadableBasic(&dresults).c_str());
 
 		switch (dresults.value)
 		{
