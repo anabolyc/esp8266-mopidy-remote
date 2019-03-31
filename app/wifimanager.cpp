@@ -5,15 +5,17 @@ Timer *WifiManager::led_timer = NULL;
 bool WifiManager::savedState1 = false;
 bool WifiManager::savedState0 = false;
 
-DeviceConnectedDelegate _callback;
+DeviceConnectedDelegate _s_callback;
+DeviceConnectedDelegate _f_callback;
 
 BssList WifiManager::networks; 
 
-void WifiManager::start(DeviceConnectedDelegate callback) {
+void WifiManager::start(DeviceConnectedDelegate success_callback, DeviceConnectedDelegate disconnect_callback) {
     pinMode(LED_BLU_PIN, OUTPUT);
 	digitalWrite(LED_BLU_PIN, 1);
 
-	_callback = callback;
+	_s_callback = success_callback;
+	_f_callback = disconnect_callback;
 
     // #ifdef WIFI_SSID
     // WifiStation.enable(true);
@@ -36,13 +38,14 @@ void WifiManager::start(DeviceConnectedDelegate callback) {
 void WifiManager::gotIP(IPAddress ip, IPAddress netmask, IPAddress gateway)
 {
 	debugf("CONNECTED: %s", ip.toString().c_str());
-	_callback();
+	_s_callback();
 }
 
 void WifiManager::connectFail(String ssid, uint8_t ssidLength, uint8_t* bssid, uint8_t reason)
 {
 	debugf("Disconnected from %s. Reason: %d", ssid.c_str(), reason);
 	configAccessPoint(true);
+	_f_callback();
 }
 
 void WifiManager::connectSuccess(String ssid, uint8_t ssidLength, uint8_t* bssid, uint8_t reason)

@@ -2,18 +2,29 @@
 #include "application.h"
 #include "wifimanager.h"
 #include "webserver.h"
+#include "mopidy.h"
 #include "ir.h"
 #include <AppSettings.h>
 
 #define SERIAL_DEBUG true
 
+bool initialized = false;
+
 void onConnected() {
-	WebServer::start();
-	IR::start();
+	Mopidy::isConnected = true;
+	if (!initialized) {
+		WebServer::start();
+		IR::start();
+		initialized = true;
+	}
+}
+
+void onDisconnected() {
+	Mopidy::isConnected = false;
 }
 
 void onReady() {
-	WifiManager::start(onConnected);
+	WifiManager::start(onConnected, onDisconnected);
 }
 
 void init()

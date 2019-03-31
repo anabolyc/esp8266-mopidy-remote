@@ -18,7 +18,7 @@ typedef Delegate<void(void)> DeviceConnectedDelegate;
 class WifiManager {
 
 public:
-    static void start(DeviceConnectedDelegate callback);
+    static void start(DeviceConnectedDelegate success_callback, DeviceConnectedDelegate disconnect_callback);
     static void configAccessPoint(bool enable);
     static BssList networks;
 

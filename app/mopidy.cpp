@@ -4,9 +4,13 @@
 #include "mopidy.h"
 
 HttpClient Mopidy::httpClient;
+
 Timer *Mopidy::led_timer = NULL;
+Timer *Mopidy::playlist_timer = new Timer();
+
 int8_t Mopidy::volume_requested;
 bool Mopidy::volume_in_prog = false;
+bool Mopidy::isConnected = false;
 
 RequestBind CMD_GET_PLAYLISTS = {HTTP_POST, "/mopidy/rpc", "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"core.playlists.as_list\"}"};
 
@@ -93,7 +97,7 @@ RequestBind CMD_PLAY_NO(String tlid)
 		payload};
 }
 
-char **playlistItems;
+char **playlistItems = NULL;
 uint8_t playlistItemsCount = 0;
 
 void Mopidy::start()
@@ -104,79 +108,125 @@ void Mopidy::start()
 
 	debugf("Mopidy service has started");
 
-	doRequest(&CMD_GET_PLAYLISTS, onGetPlaylists);
+	loadPlaylist();
+	playlist_timer->initializeMs(PLAYLIST_RELOAD, Mopidy::loadPlaylist).start();
+}
+
+void Mopidy::loadPlaylist() {
+	if (isConnected) {
+		debugf("loading playlists");
+		doRequest(&CMD_GET_PLAYLISTS, onGetPlaylists);
+	} else {
+		debugf("load playlist skipped");
+	}
 }
 
 void Mopidy::toggleState()
 {
-	digitalWrite(LED_BLU_PIN, LOW);
-	doRequest(&CMD_GET_STATE, onGetStateComplete);
+	if (isConnected) {
+		digitalWrite(LED_BLU_PIN, LOW);
+		doRequest(&CMD_GET_STATE, onGetStateComplete);
+	} else {
+		flashRedLed();
+	}
 }
 
 void Mopidy::toggleMute()
 {
-	digitalWrite(LED_BLU_PIN, LOW);
-	doRequest(&CMD_GET_MUTE, onGetMuteComplete);
+	if (isConnected) {
+		digitalWrite(LED_BLU_PIN, LOW);
+		doRequest(&CMD_GET_MUTE, onGetMuteComplete);
+	} else {
+		flashRedLed();
+	}
 }
 
 void Mopidy::stop()
 {
-	digitalWrite(LED_BLU_PIN, LOW);
-	doRequest(&CMD_STOP, onRequestComplete);
+	if (isConnected) {
+		digitalWrite(LED_BLU_PIN, LOW);
+		doRequest(&CMD_STOP, onRequestComplete);
+	} else {
+		flashRedLed();
+	}
 }
 
 void Mopidy::next()
 {
-	digitalWrite(LED_BLU_PIN, LOW);
-	doRequest(&CMD_NEXT, onRequestComplete);
+	if (isConnected) {
+		digitalWrite(LED_BLU_PIN, LOW);
+		doRequest(&CMD_NEXT, onRequestComplete);
+	} else {
+		flashRedLed();
+	}
 }
 
 void Mopidy::prev()
 {
-	digitalWrite(LED_BLU_PIN, LOW);
-	doRequest(&CMD_PREV, onRequestComplete);
+	if (isConnected) {
+		digitalWrite(LED_BLU_PIN, LOW);
+		doRequest(&CMD_PREV, onRequestComplete);
+	} else {
+		flashRedLed();
+	}
 }
 
 void Mopidy::play()
 {
-	digitalWrite(LED_BLU_PIN, LOW);
-	doRequest(&CMD_PLAY, onRequestComplete);
+	if (isConnected) {
+		digitalWrite(LED_BLU_PIN, LOW);
+		doRequest(&CMD_PLAY, onRequestComplete);
+	} else {
+		flashRedLed();
+	}
 }
 
 void Mopidy::volumeUp()
 {
-	digitalWrite(LED_BLU_PIN, LOW);
-	Mopidy::volume_requested += VOLUME_STEP;
-	if (!volume_in_prog)
-	{
-		volume_in_prog = true;
-		doRequest(&CMD_GET_VOLUME, onGetVolumeUpComplete);
+	if (isConnected) {
+		digitalWrite(LED_BLU_PIN, LOW);
+		Mopidy::volume_requested += VOLUME_STEP;
+		if (!volume_in_prog)
+		{
+			volume_in_prog = true;
+			doRequest(&CMD_GET_VOLUME, onGetVolumeUpComplete);
+		}
+	} else {
+		flashRedLed();
 	}
 }
 
 void Mopidy::volumeDown()
 {
-	digitalWrite(LED_BLU_PIN, LOW);
-	Mopidy::volume_requested -= VOLUME_STEP;
-	if (!volume_in_prog)
-	{
-		volume_in_prog = true;
-		doRequest(&CMD_GET_VOLUME, onGetVolumeDownComplete);
+	if (isConnected) {
+		digitalWrite(LED_BLU_PIN, LOW);
+		Mopidy::volume_requested -= VOLUME_STEP;
+		if (!volume_in_prog)
+		{
+			volume_in_prog = true;
+			doRequest(&CMD_GET_VOLUME, onGetVolumeDownComplete);
+		}
+	} else {
+		flashRedLed();
 	}
 }
 
 void Mopidy::playTrackNo(uint8_t num)
 {
-	if (num >= playlistItemsCount)
-	{
-		flashRedLed();
-		debugf("Track #%d not found or track list is not loaded yet");
-		return;
-	}
+	if (isConnected) {
+		if (num >= playlistItemsCount)
+		{
+			flashRedLed();
+			debugf("Track #%d not found or track list is not loaded yet");
+			return;
+		}
 
-	digitalWrite(LED_BLU_PIN, LOW);
-	RequestBind req = CMD_GET_TRACKLIST_ADD(playlistItems[num]);
-	doRequest(&req, onTracklistAdded, 4096);
+		digitalWrite(LED_BLU_PIN, LOW);
+		RequestBind req = CMD_GET_TRACKLIST_ADD(playlistItems[num]);
+		doRequest(&req, onTracklistAdded, 4096);
+	} else {
+		flashRedLed();
+	}
 }
 
 // ===================   PRIVATE  ===================
@@ -386,6 +436,13 @@ int Mopidy::onPlaylistLoaded(HttpConnection &connection, bool success)
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject &root = jsonBuffer.parseObject(reply.c_str());
 		JsonArray &result = root["result"].asArray();
+
+		if (playlistItems != NULL) {
+			for(uint8_t i = 0; i < playlistItemsCount; i++) {
+				delete playlistItems[i];
+			}
+			delete playlistItems;
+		}
 
 		playlistItems = (char **)malloc(result.size() * sizeof(char *));
 		playlistItemsCount = result.size();
