@@ -13,7 +13,6 @@ bool initialized = false;
 void onConnected() {
 	Mopidy::isConnected = true;
 	if (!initialized) {
-		WebServer::start();
 		IR::start();
 		initialized = true;
 	}
@@ -24,6 +23,7 @@ void onDisconnected() {
 }
 
 void onReady() {
+	WebServer::start();
 	WifiManager::start(onConnected, onDisconnected);
 }
 
