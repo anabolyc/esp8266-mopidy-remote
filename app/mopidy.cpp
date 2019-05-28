@@ -109,7 +109,7 @@ void Mopidy::start()
 	debugf("Mopidy service has started");
 
 	loadPlaylist();
-	playlist_timer->initializeMs(PLAYLIST_RELOAD, Mopidy::loadPlaylist).start();
+	//playlist_timer->initializeMs(PLAYLIST_RELOAD, Mopidy::loadPlaylist).start();
 }
 
 void Mopidy::loadPlaylist() {

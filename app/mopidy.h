@@ -1,7 +1,7 @@
 #ifndef _MOPIDY_H_
 #define _MOPIDY_H_
 
-#define MOPIDY_HOST    "http://192.168.1.85:6680"
+#define MOPIDY_HOST    "http://192.168.1.40:6680"
 
 #define VOLUME_STEP    3
 
@@ -14,7 +14,7 @@
 #define LED_GRN_PIN  4
 
 #define LED_OFF 250
-#define PLAYLIST_RELOAD 2*60*1000
+#define PLAYLIST_RELOAD 24 * 60 * 1000
 
 typedef struct _bind_02 {
   http_method method;
