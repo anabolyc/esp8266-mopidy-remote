@@ -1,7 +1,8 @@
 #ifndef _WEBERVER_H_
 #define _WEBERVER_H_
 
-#include <SmingCore/SmingCore.h>
+#include <SmingCore.h>
+#include <JsonObjectStream.h>
 
 class WebServer {
 

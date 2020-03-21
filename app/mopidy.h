@@ -1,3 +1,4 @@
+#include <ArduinoJson.h>
 #ifndef _MOPIDY_H_
 #define _MOPIDY_H_
 

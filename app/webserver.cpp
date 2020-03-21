@@ -18,49 +18,34 @@ void WebServer::start()
 
 	server.listen(80);
 
-	server.addPath("/", onIndex);
-	server.addPath("/wifi", onWifi);
-	server.addPath("/ajax/get-networks", onAjaxNetworkList);
-	server.addPath("/ajax/connect", onAjaxConnect);
+	server.paths.set("/", onIndex);
+	server.paths.set("/wifi", onWifi);
+	server.paths.set("/ajax/get-networks", onAjaxNetworkList);
+	server.paths.set("/ajax/connect", onAjaxConnect);
 
-	server.setDefaultHandler(onFile);
+	server.paths.setDefault(onFile);
 	debugf("Web server service has started");
 }
 
-void WebServer::onFile(HttpRequest &request, HttpResponse &response)
+void WebServer::onFile(HttpRequest& request, HttpResponse& response)
 {
-	if (WebServer::lastModified.length() > 0 && request.headers[HTTP_HEADER_IF_MODIFIED_SINCE].equals(WebServer::lastModified))
-	{
-		response.code = HTTP_STATUS_NOT_MODIFIED;
-		return;
-	}
+	String file = request.uri.getRelativePath();
 
-	String file = request.getPath();
-	if (file[0] == '/')
-		file = file.substring(1);
-
-	if (file[0] == '.')
-		response.forbidden();
-	else
-	{
-		if (WebServer::lastModified.length() > 0)
-		{
-			response.headers[HTTP_HEADER_LAST_MODIFIED] = WebServer::lastModified;
-		}
-
-		response.setCache(86400, true);
+	if(file[0] == '.')
+		response.code = HTTP_STATUS_FORBIDDEN;
+	else {
+		response.setCache(86400, true); // It's important to use cache for better performance.
 		response.sendFile(file);
 	}
 }
 
 void WebServer::onIndex(HttpRequest &request, HttpResponse &response)
 {
-	bool led = request.getQueryParameter("led") == "on";
-	TemplateFileStream *tmpl = new TemplateFileStream("hello.html");
+	TemplateFileStream* tmpl = new TemplateFileStream("hello.html");
 	auto &vars = tmpl->variables();
 	vars["IP"] = WifiStation.getIP().toString();
 	vars["MAC"] = WifiStation.getMAC();
-	response.sendTemplate(tmpl);
+	response.sendNamedStream(tmpl);
 }
 
 void WebServer::onWifi(HttpRequest &request, HttpResponse &response)
@@ -143,7 +128,7 @@ void WebServer::onAjaxConnect(HttpRequest &request, HttpResponse &response)
 	else
 	{
 		json["connected"] = WifiStation.isConnected();
-		debugf("Network already selected. Current status: %s", WifiStation.getConnectionStatusName());
+		debugf("Network already selected. Current status: %s", WifiStation.getConnectionStatusName().c_str());
 	}
 	// }
 

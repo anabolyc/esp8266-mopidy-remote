@@ -1,6 +1,5 @@
-## Local build configuration
-## Parameters configured here will override default and ENV values.
-## Uncomment and change examples:
+
+ARDUINO_LIBRARIES := ArduinoJson5 IR
 
 ## MacOS / Linux:
  ESP_HOME = /opt/esp-open-sdk
@@ -30,4 +29,3 @@ SPI_SIZE = 4M
 SPIFF_FILES = web/build
 
 PATH := /opt/esp-open-sdk/esptool2:$(PATH)
-

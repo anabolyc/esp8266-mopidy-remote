@@ -4,7 +4,7 @@
 #define IR_RECV_PIN  5 // GPIO5
 #define IR_SEND_PIN  4 // GPIO4
 
-#include <SmingCore/SmingCore.h>
+#include <SmingCore.h>
 #include "IRrecv.h"
 #include "mopidy.h"
 

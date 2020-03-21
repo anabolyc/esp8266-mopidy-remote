@@ -15,7 +15,7 @@
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
 #define ARDUINO_ARCH_ESP8266
-#include <RingBufCPP/RingBufCPP.h>
+#include <Libraries/RingBufCPP/RingBufCPP.h>
 #include "IRremoteESP8266.h"
 
 // Constants

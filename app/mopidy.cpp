@@ -1,6 +1,7 @@
-#include <SmingCore/SmingCore.h>
-#include <SmingCore/Network/HttpClient.h>
-#include <SmingCore/Data/Stream/LimitedMemoryStream.h>
+#include <SmingCore.h>
+#include <ArduinoJson.h>
+#include <Network/HttpClient.h>
+#include <Data/Stream/LimitedMemoryStream.h>
 #include "mopidy.h"
 
 HttpClient Mopidy::httpClient;
@@ -252,7 +253,7 @@ void Mopidy::doRequest(const RequestBind *request, RequestCompletedDelegate call
 
 int Mopidy::onGetStateComplete(HttpConnection &connection, bool success)
 {
-	String reply = connection.getResponseString();
+	String reply = connection.getResponse()->getBody();
 	debug_resp(connection, reply);
 	if (success)
 	{
@@ -277,7 +278,7 @@ int Mopidy::onGetStateComplete(HttpConnection &connection, bool success)
 
 int Mopidy::onGetMuteComplete(HttpConnection &connection, bool success)
 {
-	String reply = connection.getResponseString();
+	String reply = connection.getResponse()->getBody();
 	debug_resp(connection, reply);
 	if (success)
 	{
@@ -306,7 +307,7 @@ int Mopidy::onGetMuteComplete(HttpConnection &connection, bool success)
 
 int Mopidy::onGetVolumeUpComplete(HttpConnection &connection, bool success)
 {
-	String reply = connection.getResponseString();
+	String reply = connection.getResponse()->getBody();
 	debug_resp(connection, reply);
 	if (success)
 	{
@@ -329,7 +330,7 @@ int Mopidy::onGetVolumeUpComplete(HttpConnection &connection, bool success)
 
 int Mopidy::onGetVolumeDownComplete(HttpConnection &connection, bool success)
 {
-	String reply = connection.getResponseString();
+	String reply = connection.getResponse()->getBody();
 	debug_resp(connection, reply);
 	if (success)
 	{
@@ -352,7 +353,7 @@ int Mopidy::onGetVolumeDownComplete(HttpConnection &connection, bool success)
 
 int Mopidy::onRequestComplete(HttpConnection &connection, bool success)
 {
-	String reply = connection.getResponseString();
+	String reply = connection.getResponse()->getBody();
 	debug_resp(connection, reply);
 	if (success)
 		flashGrnLed();
@@ -392,8 +393,8 @@ void Mopidy::grnLedOff()
 void Mopidy::debug_resp(HttpConnection &connection, String reply)
 {
 	debugf("\t<- (%d) %s",
-		   connection.getResponseCode(),
-		   reply.c_str());
+		connection.getResponse()->code,
+		reply.c_str());
 }
 
 String Mopidy::getReplyPayloadAsString(const char *replyText)
@@ -401,7 +402,7 @@ String Mopidy::getReplyPayloadAsString(const char *replyText)
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject &root = jsonBuffer.parseObject(replyText);
 	if (root.success())
-		return root["result"].asString();
+		return root["result"].as<const char*>();
 	else
 		return NULL;
 }
@@ -410,16 +411,16 @@ String Mopidy::getReplyPayloadAsString(const char *replyText)
 
 int Mopidy::onGetPlaylists(HttpConnection &connection, bool success)
 {
-	String reply = connection.getResponseString();
+	String reply = connection.getResponse()->getBody();
 	debug_resp(connection, reply);
 	if (success)
 	{
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject &root = jsonBuffer.parseObject(reply.c_str());
-		JsonArray &result = root["result"].asArray();
+		JsonArray &result = root["result"].as<JsonArray>();
 		if (result.size() > 0)
 		{
-			String playlistUri = result[0]["uri"].asString();
+			String playlistUri = result[0]["uri"].as<const char*>();
 			RequestBind req = CMD_GET_PLAYLIST_ITEMS(playlistUri);
 			doRequest(&req, onPlaylistLoaded, 4096);
 		}
@@ -429,13 +430,13 @@ int Mopidy::onGetPlaylists(HttpConnection &connection, bool success)
 
 int Mopidy::onPlaylistLoaded(HttpConnection &connection, bool success)
 {
-	String reply = connection.getResponseString();
+	String reply = connection.getResponse()->getBody();
 	debug_resp(connection, reply);
 	if (success)
 	{
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject &root = jsonBuffer.parseObject(reply.c_str());
-		JsonArray &result = root["result"].asArray();
+		JsonArray &result = root["result"].as<JsonArray>();
 
 		if (playlistItems != NULL) {
 			for(uint8_t i = 0; i < playlistItemsCount; i++) {
@@ -449,7 +450,7 @@ int Mopidy::onPlaylistLoaded(HttpConnection &connection, bool success)
 
 		for (int8_t i = 0; i < result.size(); i++)
 		{
-			String itemUri = result[i]["uri"].asString();
+			String itemUri = result[i]["uri"].as<const char*>();
 			playlistItems[i] = (char *)malloc((itemUri.length() + 1) * sizeof(char));
 			strcpy(playlistItems[i], itemUri.c_str());
 			debugf("\t\tTrack #%d %s added to track list", i, itemUri.c_str());
@@ -460,16 +461,16 @@ int Mopidy::onPlaylistLoaded(HttpConnection &connection, bool success)
 
 int Mopidy::onTracklistAdded(HttpConnection &connection, bool success)
 {
-	String reply = connection.getResponseString();
+	String reply = connection.getResponse()->getBody();
 	debug_resp(connection, reply);
 	if (success)
 	{
 		DynamicJsonBuffer jsonBuffer;
 		JsonObject &root = jsonBuffer.parseObject(reply.c_str());
-		JsonArray &result = root["result"].asArray();
+		JsonArray &result = root["result"].as<JsonArray>();
 		if (result.size() > 0)
 		{
-			String tlid = result[0]["tlid"].asString();
+			String tlid = result[0]["tlid"].as<const char*>();
 			RequestBind req = CMD_PLAY_NO(tlid);
 			doRequest(&req, onRequestComplete);
 		}

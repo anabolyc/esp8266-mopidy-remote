@@ -35,22 +35,22 @@ void WifiManager::start(DeviceConnectedDelegate success_callback, DeviceConnecte
 	WifiStation.startScan(networkScanCompleted);
 }
 
-void WifiManager::gotIP(IPAddress ip, IPAddress netmask, IPAddress gateway)
+void WifiManager::gotIP(IpAddress ip, IpAddress netmask, IpAddress gateway)
 {
 	debugf("CONNECTED: %s", ip.toString().c_str());
 	_s_callback();
 }
 
-void WifiManager::connectFail(String ssid, uint8_t ssidLength, uint8_t* bssid, uint8_t reason)
+void WifiManager::connectFail(const String& ssid, MacAddress bssid, WifiDisconnectReason reason)
 {
 	debugf("Disconnected from %s. Reason: %d", ssid.c_str(), reason);
 	configAccessPoint(true);
 	_f_callback();
 }
 
-void WifiManager::connectSuccess(String ssid, uint8_t ssidLength, uint8_t* bssid, uint8_t reason)
+void WifiManager::connectSuccess(const String& ssid, MacAddress bssid, uint8_t channel)
 {
-	debugf("Connected to %s. Reason: %d", ssid.c_str(), reason);
+	debugf("Connected to %s.", ssid.c_str());
 	configAccessPoint(false);
 }
 
@@ -60,7 +60,7 @@ void WifiManager::configAccessPoint(bool enable) {
 			debugf("Starting access point");
 			WifiAccessPoint.enable(enable);
 			WifiAccessPoint.config("esp8266-mopidyctl", "", AUTH_OPEN);
-            WifiAccessPoint.setIP(IPAddress(192, 168, 2, 1));
+            WifiAccessPoint.setIP(IpAddress(192, 168, 2, 1));
 			savedState0 = true;
 		}	
 	} else {

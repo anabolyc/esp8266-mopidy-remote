@@ -5,7 +5,8 @@
  *      Author: Anakod
  */
 
-#include <SmingCore/SmingCore.h>
+#include <SmingCore.h>
+#include <ArduinoJson.h>
 
 #ifndef INCLUDE_APPSETTINGS_H_
 #define INCLUDE_APPSETTINGS_H_
@@ -27,8 +28,8 @@ struct ApplicationSettingsStorage {
 			JsonObject& root = jsonBuffer.parseObject(jsonString);
 
 			JsonObject& network = root["network"];
-			ssid = network["ssid"].asString();
-			password = network["password"].asString();
+			ssid = network["ssid"].as<const char*>();
+			password = network["password"].as<const char*>();
 
 			delete[] jsonString;
 		}

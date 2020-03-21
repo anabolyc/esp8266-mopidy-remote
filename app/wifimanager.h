@@ -10,8 +10,8 @@
 // #define WIFI_PWD "92637771010"
 // #endif
 
-#include <SmingCore/SmingCore.h>
-#include <SmingCore/Delegate.h>
+#include <SmingCore.h>
+//#include <SmingCore/Delegate.h>
 
 typedef Delegate<void(void)> DeviceConnectedDelegate;
 
@@ -32,9 +32,9 @@ private:
     static bool savedState1;
     static bool savedState0;
 
-    static void connectFail(String ssid, uint8_t ssidLength, uint8_t* bssid, uint8_t reason);
-    static void connectSuccess(String ssid, uint8_t ssidLength, uint8_t* bssid, uint8_t reason);
-    static void gotIP(IPAddress ip, IPAddress netmask, IPAddress gateway);
+    static void connectFail(const String& ssid, MacAddress bssid, WifiDisconnectReason reason);
+    static void connectSuccess(const String& ssid, MacAddress bssid, uint8_t channel);
+    static void gotIP(IpAddress ip, IpAddress netmask, IpAddress gateway);
 
     static void networkScanCompleted(bool succeeded, BssList list);
 
