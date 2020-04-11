@@ -236,6 +236,7 @@ void Mopidy::doRequest(const RequestBind *request, RequestCompletedDelegate call
 {
 	HttpRequest *httpRequest = new HttpRequest(URL(MOPIDY_HOST + request->path));
 	httpRequest->setMethod(request->method);
+	httpRequest->setHeader("Content-Type", "application/json");
 
 	if (request->method == HTTP_POST)
 	{

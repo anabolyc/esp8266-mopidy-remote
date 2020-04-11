@@ -2,7 +2,7 @@
 #ifndef _MOPIDY_H_
 #define _MOPIDY_H_
 
-#define MOPIDY_HOST    "http://192.168.1.40:6680"
+#define MOPIDY_HOST    "http://192.168.1.42:6680"
 
 #define VOLUME_STEP    3
 
