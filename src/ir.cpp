@@ -1,51 +1,53 @@
 #include "ir.h"
+#include "mopidy.h"
+#include <Timer.h>
 
-Timer IR::ir_timer;
+Timer* _ir_timer = NULL;
 IRrecv IR::ir_recv(IR_RECV_PIN);
+decode_results dresults;
 
-void IR::start()
+void IR::start(Timer* timer)
 {
 	ir_recv.enableIRIn();
-	debugf("IR service has started");
+	Serial.println(F("IR service has started"));
 
-	ir_timer.initializeMs(50, receiveIR).start();
-	Mopidy::start();
+	_ir_timer = timer;
+	_ir_timer->after(IR_CHECK_EVERY_MS, receiveIR);
+	Mopidy::start(timer);
 }
 
 void IR::receiveIR()
 {
-	ir_timer.stop();
-	decode_results dresults;
 	dresults.decode_type = UNUSED;
 	if (ir_recv.decode(&dresults))
 	{
-		debugf("IR received: %d", dresults.value);
-		//debugf("%s", resultToHumanReadableBasic(&dresults).c_str());
+		serialPrintUint64(dresults.value, HEX);
+		Serial.println();
 
 		switch (dresults.value)
 		{
 		case BTN_A:
 		case BTN_0A:
-			Mopidy::toggleState();
-			break;
+		 	Mopidy::toggleState();
+		 	break;
 		case BTN_B:
 		//case BTN_STOP:
 		case BTN_0STOP:
-			Mopidy::stop();
+		 	Mopidy::stop();
 			break;
 		//case BTN_PLAY:
 		case BTN_0PLAY:
-			Mopidy::play();
+		 	Mopidy::play();
 			break;
 		case BTN_C:
 		//case BTN_VOLDN:
 		case BTN_0VOLDN:
-			Mopidy::volumeDown();
+		 	Mopidy::volumeDown();
 			break;
 		case BTN_D:
 		//case BTN_VOLUP:
 		case BTN_0VOLUP:
-			Mopidy::volumeUp();
+		 	Mopidy::volumeUp();
 			break;
 		//case BTN_NEXT:
 		case BTN_0NEXT:
@@ -100,6 +102,8 @@ void IR::receiveIR()
 			Mopidy::playTrackNo(9);
 			break;
 		}
+
+		ir_recv.resume();
 	}
-	ir_timer.start();
+	_ir_timer->after(IR_CHECK_EVERY_MS, receiveIR);
 }

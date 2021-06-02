@@ -1,12 +1,14 @@
 #ifndef _IR_H_
 #define _IR_H_
 
-#define IR_RECV_PIN  5 // GPIO5
-#define IR_SEND_PIN  4 // GPIO4
+#define IR_RECV_PIN        5
+#define IR_SEND_PIN        4
+#define IR_CHECK_EVERY_MS 50
 
-#include <SmingCore.h>
-#include "IRrecv.h"
-#include "mopidy.h"
+#include <Timer.h>
+#include <IRremoteESP8266.h>
+#include <IRrecv.h>
+#include <IRutils.h>
 
 #define BTN_A 0xE0E036C9
 #define BTN_B 0xE0E028D7
@@ -66,13 +68,12 @@
 class IR {
 
 public:
-    static void start();
+    static void start(Timer* t);
 
 protected:
     static void receiveIR();
 
 private:
-    static Timer  ir_timer;
     static IRrecv ir_recv;
 };
 
