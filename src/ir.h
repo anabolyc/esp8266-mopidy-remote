@@ -5,6 +5,10 @@
 #define IR_SEND_PIN        4
 #define IR_CHECK_EVERY_MS 50
 
+#define IR_BUF_SIZE 1024
+#define IR_TIMEOUT 50
+#define IR_TOLERANCE 25
+
 #include <Timer.h>
 #include <IRremoteESP8266.h>
 #include <IRrecv.h>
@@ -15,55 +19,38 @@
 #define BTN_C 0xE0E0A857
 #define BTN_D 0xE0E06897
 
-#define BTN_0A 0xFFA25D
+#define BTN_NEC_A 0x807FC837
 
-#define BTN_PLAY 0xE0E0E21D
-#define BTN_STOP 0xE0E0629D
-
-#define BTN_0PLAY 0xFF42BD
-#define BTN_0STOP 0xFF52AD
+#define BTN_NEC_PLAY 0x807F32CD
+#define BTN_NEC_STOP 0x807F02FD
 
 #define BTN_VOLUP 0xE0E0E01F
 #define BTN_VOLDN 0xE0E0D02F
 
-#define BTN_0VOLUP 0xFFC23D
-#define BTN_0VOLDN 0xFF02FD
+#define BTN_NEC_VOLUP 0x807F18E7
+#define BTN_NEC_VOLDN 0x807F08F7
 
 #define BTN_NEXT 0xE0E012ED 
 #define BTN_PREV 0xE0E0A25D 
 
-#define BTN_0NEXT 0xFF906F
-#define BTN_0PREV 0xFFA857
+#define BTN_NEC_NEXT 0x807FF20D
+#define BTN_NEC_PREV 0x807FD22D
 
-#define BTN_MUTE 0xE0E0F00F
+#define BTN_NEC_0 0x807F807F
+#define BTN_NEC_1 0x807F728D
+#define BTN_NEC_2 0x807FB04F
+#define BTN_NEC_3 0x807F30CF
+#define BTN_NEC_4 0x807F52AD
+#define BTN_NEC_5 0x807F906F
+#define BTN_NEC_6 0x807F10EF
+#define BTN_NEC_7 0x807F629D
+#define BTN_NEC_8 0x807FA05F
+#define BTN_NEC_9 0x807F20DF
 
-#define BTN_0MUTE 0xFF4AB5
-
-#define BTN_0 0xE0E08877
-#define BTN_1 0xE0E020DF
-#define BTN_2 0xE0E0A05F
-#define BTN_3 0xE0E0609F
-#define BTN_4 0xE0E010EF
-#define BTN_5 0xE0E0906F
-#define BTN_6 0xE0E050AF
-#define BTN_7 0xE0E030CF
-#define BTN_8 0xE0E0B04F
-#define BTN_9 0xE0E0708F
-
-#define BTN_00 0xFFE01F
-#define BTN_01 0xFF6897
-#define BTN_02 0xFF9867
-#define BTN_03 0xFFB04F
-#define BTN_04 0xFF30CF
-#define BTN_05 0xFF18E7
-#define BTN_06 0xFF7A85
-#define BTN_07 0xFF10EF
-#define BTN_08 0xFF38C7
-#define BTN_09 0xFF5AA5
-
-#define BTN_0CHP 0xFFE21D
-#define BTN_0CHM 0xFF629D
-#define BTN_0EQ  0xFF22DD
+#define BTN_NEC_TOGGLE_PLAYLIST 0x807F9867
+// #define BTN_NEC_CHP 0xFFE21D
+// #define BTN_NEC_CHM 0xFF629D
+// #define BTN_NEC_EQ  0xFF22DD
 
 class IR {
 

@@ -7,11 +7,13 @@
 WiFiClient client;
 HTTPClient http;
 
-Timer* _timer = NULL;
+Timer *_timer = NULL;
 
 int8_t volume_requested;
 bool volume_in_prog = false;
 bool Mopidy::isConnected = false;
+uint8_t Mopidy::playlistIndex = 0;
+uint8_t Mopidy::loadPlaylistIndex = 0;
 
 RequestBind CMD_GET_PLAYLISTS = {"/mopidy/rpc", "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"core.playlists.as_list\"}"};
 
@@ -36,8 +38,7 @@ RequestBind CMD_SET_VOLUME(int value)
 
 	return {
 		"/mopidy/rpc",
-		payload	
-	};
+		payload};
 }
 
 RequestBind CMD_GET_MUTE = {"/mopidy/rpc", "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"core.mixer.get_mute\"}"};
@@ -50,8 +51,7 @@ RequestBind CMD_SET_MUTE(bool value)
 
 	return {
 		"/mopidy/rpc",
-		payload
-	};
+		payload};
 }
 
 RequestBind CMD_GET_PLAYLIST_ITEMS(String uri)
@@ -61,8 +61,7 @@ RequestBind CMD_GET_PLAYLIST_ITEMS(String uri)
 	payload.concat("\" }}");
 	return {
 		"/mopidy/rpc",
-		payload
-	};
+		payload};
 }
 
 RequestBind CMD_GET_TRACKLIST_ADD(String uri)
@@ -72,8 +71,7 @@ RequestBind CMD_GET_TRACKLIST_ADD(String uri)
 	payload.concat("\" ] }}");
 	return {
 		"/mopidy/rpc",
-		payload
-	};
+		payload};
 }
 
 RequestBind CMD_PLAY_NO(String tlid)
@@ -83,18 +81,23 @@ RequestBind CMD_PLAY_NO(String tlid)
 	payload.concat(" }}");
 	return {
 		"/mopidy/rpc",
-		payload
-	};
+		payload};
 }
 
-char **playlistItems = NULL;
-uint8_t playlistItemsCount = 0;
+char **playlistItems[PLAYLIST_COUNT];
+uint8_t playlistItemsCount[PLAYLIST_COUNT];
 
-void Mopidy::start(Timer* timer)
+void Mopidy::start(Timer *timer)
 {
 	pinMode(LED_RED_PIN, OUTPUT);
 	pinMode(LED_BLU_PIN, OUTPUT);
 	pinMode(LED_GRN_PIN, OUTPUT);
+
+	for (uint8_t i = 0; i < PLAYLIST_COUNT; i++)
+	{
+		playlistItemsCount[i] = 0;
+		playlistItems[i] = NULL;
+	}
 
 	Serial.println(F("Mopidy service has started"));
 
@@ -105,78 +108,101 @@ void Mopidy::start(Timer* timer)
 	_timer->every(PLAYLIST_RELOAD, loadPlaylist);
 }
 
-void Mopidy::loadPlaylist() {
-	if (isConnected) {
+void Mopidy::loadPlaylist()
+{
+	if (isConnected)
+	{
 		Serial.println(F("Loading playlists..."));
 		doRequest(&CMD_GET_PLAYLISTS, onGetPlaylists);
-	} else {
+	}
+	else
+	{
 		Serial.println(F("Load playlist skipped"));
 	}
 }
 
 void Mopidy::toggleState()
 {
-	if (isConnected) {
+	if (isConnected)
+	{
 		digitalWrite(LED_BLU_PIN, LOW);
 		doRequest(&CMD_GET_STATE, onGetStateComplete);
-	} else {
+	}
+	else
+	{
 		flashRedLed();
 	}
 }
 
 void Mopidy::toggleMute()
 {
-	if (isConnected) {
+	if (isConnected)
+	{
 		digitalWrite(LED_BLU_PIN, LOW);
 		doRequest(&CMD_GET_MUTE, onGetMuteComplete);
-	} else {
+	}
+	else
+	{
 		flashRedLed();
 	}
 }
 
 void Mopidy::stop()
 {
-	if (isConnected) {
+	if (isConnected)
+	{
 		digitalWrite(LED_BLU_PIN, LOW);
 		doRequest(&CMD_STOP, onRequestComplete);
-	} else {
+	}
+	else
+	{
 		flashRedLed();
 	}
 }
 
 void Mopidy::next()
 {
-	if (isConnected) {
+	if (isConnected)
+	{
 		digitalWrite(LED_BLU_PIN, LOW);
 		doRequest(&CMD_NEXT, onRequestComplete);
-	} else {
+	}
+	else
+	{
 		flashRedLed();
 	}
 }
 
 void Mopidy::prev()
 {
-	if (isConnected) {
+	if (isConnected)
+	{
 		digitalWrite(LED_BLU_PIN, LOW);
 		doRequest(&CMD_PREV, onRequestComplete);
-	} else {
+	}
+	else
+	{
 		flashRedLed();
 	}
 }
 
 void Mopidy::play()
 {
-	if (isConnected) {
+	if (isConnected)
+	{
 		digitalWrite(LED_BLU_PIN, LOW);
 		doRequest(&CMD_PLAY, onRequestComplete);
-	} else {
+	}
+	else
+	{
 		flashRedLed();
 	}
 }
 
 void Mopidy::volumeUp()
 {
-	if (isConnected) {
+	if (isConnected)
+	{
 		digitalWrite(LED_BLU_PIN, LOW);
 		volume_requested += VOLUME_STEP;
 		if (!volume_in_prog)
@@ -184,14 +210,17 @@ void Mopidy::volumeUp()
 			volume_in_prog = true;
 			doRequest(&CMD_GET_VOLUME, onGetVolumeUpComplete);
 		}
-	} else {
+	}
+	else
+	{
 		flashRedLed();
 	}
 }
 
 void Mopidy::volumeDown()
 {
-	if (isConnected) {
+	if (isConnected)
+	{
 		digitalWrite(LED_BLU_PIN, LOW);
 		volume_requested -= VOLUME_STEP;
 		if (!volume_in_prog)
@@ -199,15 +228,18 @@ void Mopidy::volumeDown()
 			volume_in_prog = true;
 			doRequest(&CMD_GET_VOLUME, onGetVolumeDownComplete);
 		}
-	} else {
+	}
+	else
+	{
 		flashRedLed();
 	}
 }
 
 void Mopidy::playTrackNo(uint8_t num)
 {
-	if (isConnected) {
-		if (num >= playlistItemsCount)
+	if (isConnected)
+	{
+		if (num >= playlistItemsCount[playlistIndex])
 		{
 			flashRedLed();
 			Serial.print(F("Track not found or track list is not loaded yet: "));
@@ -216,9 +248,11 @@ void Mopidy::playTrackNo(uint8_t num)
 		}
 
 		digitalWrite(LED_BLU_PIN, LOW);
-		RequestBind req = CMD_GET_TRACKLIST_ADD(playlistItems[num]);
+		RequestBind req = CMD_GET_TRACKLIST_ADD(playlistItems[playlistIndex][num]);
 		doRequest(&req, onTracklistAdded, 4096);
-	} else {
+	}
+	else
+	{
 		flashRedLed();
 	}
 }
@@ -233,18 +267,21 @@ void doRequest(const RequestBind *request, std::function<void(int, String)> call
 	Serial.println(request->payload);
 
 	http.begin(client, MOPIDY_HOST, MOPIDY_PORT, request->path);
-    http.addHeader("Content-Type", "application/json");
-	
+	http.addHeader("Content-Type", "application/json");
+
 	int statusCode = http.POST(request->payload);
-	if (statusCode > 0) {
-		String response = http.getString();	
-		
+	if (statusCode > 0)
+	{
+		String response = http.getString();
+
 		Serial.print(F(" <- "));
 		Serial.println(statusCode);
 		Serial.println(response);
 
 		callback(statusCode, response);
-	} else {
+	}
+	else
+	{
 		Serial.print(F(" <X "));
 		Serial.println(http.errorToString(statusCode));
 	}
@@ -353,7 +390,7 @@ String getReplyPayloadAsString(String replyText)
 	DynamicJsonBuffer jsonBuffer;
 	JsonObject &root = jsonBuffer.parseObject(replyText);
 	if (root.success())
-		return root["result"].as<const char*>();
+		return root["result"].as<const char *>();
 	else
 		return "";
 }
@@ -369,7 +406,7 @@ void Mopidy::onGetPlaylists(int status, String response)
 		JsonArray &result = root["result"].as<JsonArray>();
 		if (result.size() > 0)
 		{
-			String playlistUri = result[0]["uri"].as<const char*>();
+			String playlistUri = result[loadPlaylistIndex]["uri"].as<const char *>();
 			RequestBind req = CMD_GET_PLAYLIST_ITEMS(playlistUri);
 			doRequest(&req, onPlaylistLoaded, 4096);
 		}
@@ -384,27 +421,36 @@ void Mopidy::onPlaylistLoaded(int status, String response)
 		JsonObject &root = jsonBuffer.parseObject(response);
 		JsonArray &result = root["result"].as<JsonArray>();
 
-		if (playlistItems != NULL) {
-			for(uint8_t i = 0; i < playlistItemsCount; i++) {
-				delete playlistItems[i];
+		if (playlistItems[loadPlaylistIndex] != NULL)
+		{
+			for (uint8_t i = 0; i < playlistItemsCount[loadPlaylistIndex]; i++)
+			{
+				delete playlistItems[loadPlaylistIndex][i];
 			}
-			delete playlistItems;
+			delete playlistItems[loadPlaylistIndex];
 		}
 
-		playlistItems = (char **)malloc(result.size() * sizeof(char *));
-		playlistItemsCount = result.size();
+		playlistItems[loadPlaylistIndex] = (char **)malloc(result.size() * sizeof(char *));
+		playlistItemsCount[loadPlaylistIndex] = result.size();
 
 		Serial.println(F("Adding tracks to track list"));
 		for (uint8_t i = 0; i < result.size(); i++)
 		{
-			String itemUri = result[i]["uri"].as<const char*>();
-			playlistItems[i] = (char *)malloc((itemUri.length() + 1) * sizeof(char));
-			strcpy(playlistItems[i], itemUri.c_str());
-			
+			String itemUri = result[i]["uri"].as<const char *>();
+			playlistItems[loadPlaylistIndex][i] = (char *)malloc((itemUri.length() + 1) * sizeof(char));
+			strcpy(playlistItems[loadPlaylistIndex][i], itemUri.c_str());
+
 			Serial.print(i);
 			Serial.print('\t');
 			Serial.print(itemUri);
 			Serial.println();
+		}
+
+		if (++loadPlaylistIndex == PLAYLIST_COUNT)
+		{
+			loadPlaylistIndex = 0;
+		} else {
+			loadPlaylist();
 		}
 	}
 }
@@ -418,11 +464,17 @@ void Mopidy::onTracklistAdded(int status, String response)
 		JsonArray &result = root["result"].as<JsonArray>();
 		if (result.size() > 0)
 		{
-			String tlid = result[0]["tlid"].as<const char*>();
+			String tlid = result[0]["tlid"].as<const char *>();
 			RequestBind req = CMD_PLAY_NO(tlid);
 			doRequest(&req, onRequestComplete);
 		}
 	}
+}
+
+void Mopidy::togglePlaylist()
+{
+	if (++playlistIndex == PLAYLIST_COUNT)
+		playlistIndex = 0;
 }
 
 // ================= LEDS FLASHING =================
