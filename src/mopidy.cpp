@@ -262,6 +262,9 @@ void Mopidy::playTrackNo(uint8_t num)
 void doRequest(const RequestBind *request, std::function<void(int, String)> callback, size_t size)
 {
 	Serial.print(F(" -> POST: "));
+	Serial.print(MOPIDY_HOST);
+	Serial.print(':');
+	Serial.print(MOPIDY_PORT);
 	Serial.print(request->path);
 	Serial.print(' ');
 	Serial.println(request->payload);
@@ -406,7 +409,7 @@ void Mopidy::onGetPlaylists(int status, String response)
 		JsonArray &result = root["result"].as<JsonArray>();
 		if (result.size() > 0)
 		{
-			String playlistUri = result[loadPlaylistIndex]["uri"].as<const char *>();
+			String playlistUri = result[PLAYLIST_OFFSET + loadPlaylistIndex]["uri"].as<const char *>();
 			RequestBind req = CMD_GET_PLAYLIST_ITEMS(playlistUri);
 			doRequest(&req, onPlaylistLoaded, 4096);
 		}

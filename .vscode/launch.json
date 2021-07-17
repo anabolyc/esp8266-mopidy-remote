@@ -12,21 +12,21 @@
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug",
-            "executable": "/home/dronische/dev/__my/esp8266-mopidy-remote/.pio/build/esp12e/firmware.elf",
-            "projectEnvName": "esp12e",
+            "executable": "/home/dronische/dev/__my/esp8266-mopidy-remote/.pio/build/esp12e-node-1/firmware.elf",
+            "projectEnvName": "esp12e-node-1",
             "toolchainBinDir": "/home/dronische/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart",
             "preLaunchTask": {
                 "type": "PlatformIO",
-                "task": "Pre-Debug"
+                "task": "Pre-Debug (esp12e-node-1)"
             }
         },
         {
             "type": "platformio-debug",
             "request": "launch",
             "name": "PIO Debug (skip Pre-Debug)",
-            "executable": "/home/dronische/dev/__my/esp8266-mopidy-remote/.pio/build/esp12e/firmware.elf",
-            "projectEnvName": "esp12e",
+            "executable": "/home/dronische/dev/__my/esp8266-mopidy-remote/.pio/build/esp12e-node-1/firmware.elf",
+            "projectEnvName": "esp12e-node-1",
             "toolchainBinDir": "/home/dronische/.platformio/packages/toolchain-xtensa/bin",
             "internalConsoleOptions": "openOnSessionStart"
         }

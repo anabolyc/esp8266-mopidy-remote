@@ -3,8 +3,8 @@
 
 #include <Timer.h>
 
-#define MOPIDY_HOST "192.168.1.41"
-#define MOPIDY_PORT 6680
+// #define MOPIDY_HOST "192.168.1.41"
+// #define MOPIDY_PORT 6680
 
 #define VOLUME_STEP 3
 
@@ -19,7 +19,8 @@
 #define LED_OFF 250
 #define PLAYLIST_LOAD 3 * 1000         // 3 sec
 #define PLAYLIST_RELOAD 15 * 60 * 1000 // 15 min
-#define PLAYLIST_COUNT 2
+// #define PLAYLIST_OFFSET 2
+// #define PLAYLIST_COUNT 2
 
 typedef struct _bind_02
 {

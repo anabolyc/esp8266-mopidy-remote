@@ -16,7 +16,8 @@ class WifiManager {
 public:
     static void start(Timer* t, std::function<void()> success_callback, std::function<void()> disconnect_callback);
 protected:
-    static void blinkWifiLed(bool enable);
+    static void blinkWifiOn();
+    static void blinkWifiOff();
     static void wifiLedOn();
     static void wifiLedOff();
 private:
